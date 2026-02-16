@@ -1,4 +1,4 @@
-# Tray RAM CPU Monitor
+# System tray monitor for MacOS
 
 A lightweight macOS menu bar application that monitors and displays real-time CPU usage, RAM usage, and CPU temperature.
 
