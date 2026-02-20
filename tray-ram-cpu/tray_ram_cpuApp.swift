@@ -5,9 +5,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var timer: Timer?
     var previousCPUTicks: [(user: Double, system: Double, nice: Double, idle: Double)] = []
+    var accentColour: NSColor = NSColor.systemOrange
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+
+        accentColour = loadAccentColour()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
@@ -19,6 +22,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         timer = Timer.scheduledTimer(timeInterval: 3.0, target: self, selector: #selector(updateDisplay), userInfo: nil, repeats: true)
     }
 
+    func loadAccentColour() -> NSColor {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let path = "\(home)/.config/systemtraymonitor/colour.txt"
+        guard let hex = try? String(contentsOfFile: path, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines),
+              hex.count == 6 else { return NSColor.systemOrange }
+        let scanner = Scanner(string: hex)
+        var rgb: UInt64 = 0
+        scanner.scanHexInt64(&rgb)
+        return NSColor(red: CGFloat((rgb >> 16) & 0xFF) / 255.0,
+                       green: CGFloat((rgb >> 8) & 0xFF) / 255.0,
+                       blue: CGFloat(rgb & 0xFF) / 255.0, alpha: 1.0)
+    }
+
     @objc func updateDisplay() {
         let cpu = getCPUUsage()
         let ram = getRAMUsage()
@@ -26,16 +42,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let button = statusItem.button else { return }
 
-        let text: String
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
+        let normal: [NSAttributedString.Key: Any] = [.font: font]
+        let coloured: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: accentColour]
+
+        let result = NSMutableAttributedString()
+
+        // "C" in colour, "PU XX%"
+        result.append(NSAttributedString(string: "C", attributes: coloured))
+        result.append(NSAttributedString(string: String(format: "PU %-2.0f%%  ", cpu), attributes: normal))
+
+        // "R" in colour, "AM XX%"
+        result.append(NSAttributedString(string: "R", attributes: coloured))
+        result.append(NSAttributedString(string: String(format: "AM %-2.0f%%", ram), attributes: normal))
+
         if temp > 0 {
-            text = String(format: "CPU %-2.0f%%  RAM %-2.0f%%  %2.0f°C", cpu, ram, temp)
-        } else {
-            text = String(format: "CPU %-2.0f%%  RAM %-2.0f%%", cpu, ram)
+            result.append(NSAttributedString(string: String(format: "  %2.0f", temp), attributes: normal))
+            result.append(NSAttributedString(string: "\u{00B0}", attributes: coloured))
+            result.append(NSAttributedString(string: "C", attributes: normal))
         }
 
-        button.attributedTitle = NSAttributedString(string: text, attributes: [
-            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
-        ])
+        button.attributedTitle = result
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { false }
