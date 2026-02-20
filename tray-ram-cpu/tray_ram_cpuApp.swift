@@ -1,18 +1,10 @@
 import Cocoa
 import IOKit
 
-@main
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var timer: Timer?
     var previousCPUTicks: [(user: Double, system: Double, nice: Double, idle: Double)] = []
-
-    static func main() {
-        let app = NSApplication.shared
-        let delegate = AppDelegate()
-        app.delegate = delegate
-        app.run()
-    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -156,3 +148,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return Double(output.bytes.0) + Double(output.bytes.1) / 256.0
     }
 }
+
+// Entry point
+let app = NSApplication.shared
+let delegate = AppDelegate()
+app.delegate = delegate
+app.run()
