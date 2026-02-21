@@ -42,24 +42,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let button = statusItem.button else { return }
 
-        let font = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular)
-        let normal: [NSAttributedString.Key: Any] = [.font: font]
-        let coloured: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: accentColour]
+        let boldFont = NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .bold)
+        let accent: [NSAttributedString.Key: Any] = [.font: boldFont, .foregroundColor: accentColour]
 
         let result = NSMutableAttributedString()
 
-        // "C" in colour, "PU XX%"
-        result.append(NSAttributedString(string: "C", attributes: coloured))
-        result.append(NSAttributedString(string: String(format: "PU %-2.0f%%  ", cpu), attributes: normal))
-
-        // "R" in colour, "AM XX%"
-        result.append(NSAttributedString(string: "R", attributes: coloured))
-        result.append(NSAttributedString(string: String(format: "AM %-2.0f%%", ram), attributes: normal))
+        result.append(NSAttributedString(string: String(format: "CPU %-2.0f%%  ", cpu), attributes: accent))
+        result.append(NSAttributedString(string: String(format: "RAM %-2.0f%%", ram), attributes: accent))
 
         if temp > 0 {
-            result.append(NSAttributedString(string: String(format: "  %2.0f", temp), attributes: normal))
-            result.append(NSAttributedString(string: "\u{00B0}", attributes: coloured))
-            result.append(NSAttributedString(string: "C", attributes: normal))
+            result.append(NSAttributedString(string: String(format: "  %2.0f\u{00B0}C", temp), attributes: accent))
         }
 
         button.attributedTitle = result
